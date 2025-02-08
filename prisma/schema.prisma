@@ -1,0 +1,19 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model PackingData {
+  id       String   @id @default(uuid())
+  datetime DateTime
+  pic      String
+  weight   Float
+  qtyA     Int
+  qtyB     Int
+  qtyC     Int
+  reject   Float
+}
