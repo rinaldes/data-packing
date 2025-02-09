@@ -17,3 +17,9 @@ model PackingData {
   qtyC     Int
   reject   Float
 }
+
+model PIC {
+  id    String  @id @default(uuid())
+  name  String  @unique
+  createdAt DateTime @default(now())
+}

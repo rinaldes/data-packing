@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import type { TableColumn } from "@nuxt/ui";
-
 type Packing = {
   id: string;
   datetime: string;
@@ -57,7 +55,6 @@ const columns = [
   },
 ];
 
-
 const q = ref("");
 
 const filteredRows = computed(() => {
@@ -74,16 +71,12 @@ const filteredRows = computed(() => {
 </script>
 
 <template>
-  <UContainer>
-    <h1 class="text-xl font-bold mb-4">Dashboard</h1>
-    <UCard>
-      <h2 class="text-lg font-semibold">Report Data</h2>
-      <div
-        class="flex px-3 py-3.5 border-b border-gray-200 dark:border-gray-700"
-      >
-        <UInput v-model="q" placeholder="Search..." />
-      </div>
-      <UTable :rows="filteredRows" :columns="columns" class="flex-1" />
-    </UCard>
-  </UContainer>
+  <h1 class="mb-4">Dashboard</h1>
+  <h2 class="font-semibold">Report Data</h2>
+  <div class="flex px-3 py-3.5 border-b border-gray-200 dark:border-gray-700">
+    <Input>
+      <UInput v-model="q" variant="none" placeholder="Search..." />
+    </Input>
+  </div>
+  <UTable :rows="filteredRows" :columns="columns" class="flex-1" />
 </template>

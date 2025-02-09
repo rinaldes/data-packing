@@ -1,0 +1,24 @@
+<script setup lang="ts">
+defineProps<{
+  label?: string;
+  icon?: string;
+  type?: string;
+}>();
+
+const emit = defineEmits<{
+  (e: "click"): void;
+}>();
+</script>
+
+<template>
+  <UButton
+    :type="type"
+    color="primary"
+    :icon="icon"
+    size="lg"
+    @click="emit('click')"
+    class="py-4 font-medium rounded-none justify-center w-52 hover:bg-color-plantation-500 hover:opacity-80"
+  >
+    {{ label }}
+  </UButton>
+</template>

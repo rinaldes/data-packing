@@ -1,3 +1,19 @@
-html, body {
-  @apply bg-janna-500;
+@font-face {
+  font-family: "Apice";
+  src: url("/apice.ttf") format("truetype");
+  font-weight: normal;
+  font-style: normal;
+}
+
+html,
+body {
+  @apply bg-janna-500 text-plantation-500;
+}
+
+h1 {
+  @apply text-4xl text-crown-of-thorns-500 font-semibold;
+  font-family: "Apice";
+}
+p {
+  @apply text-lg;
 }
