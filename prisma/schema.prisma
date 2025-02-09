@@ -18,7 +18,7 @@ model PackingData {
   reject   Float
 }
 
-model PIC {
+model Pic {
   id    String  @id @default(uuid())
   name  String  @unique
   createdAt DateTime @default(now())

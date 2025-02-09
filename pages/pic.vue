@@ -1,177 +1,102 @@
-<script setup lang="ts">
-const formData = reactive({
-  datetime: "",
-  pic: "",
-  weight: undefined,
-  qtyA: undefined,
-  qtyB: undefined,
-  qtyC: undefined,
-  reject: undefined,
-});
+<script setup>
+const { data: pics, refresh } = useFetch("/api/pic");
+const newPIC = ref({ name: "" });
+const rows = computed(() => pics.value?.data || []);
+const page = ref(1);
+const pageCount = 10;
+const q = ref("");
 
-async function submitData() {
-  await useFetch("/api/packing", { method: "POST", body: formData });
-  alert("Data submitted!");
+async function addPIC() {
+  try {
+    await useFetch("/api/pic", {
+      method: "POST",
+      body: newPIC.value,
+    });
+    newPIC.value = { name: "" };
+    await refresh();
+  } catch (error) {
+    console.error("Failed to add PIC:", error);
+  }
 }
 
-const ClearForm = () => {
-  console.log("Button clicked!");
-  formData.datetime = "";
-  formData.pic = "";
-  formData.weight = undefined;
-  formData.qtyA = undefined;
-  formData.qtyB = undefined;
-  formData.qtyC = undefined;
-  formData.reject = undefined;
-};
+const columns = [
+  {
+    key: "id",
+    label: "No",
+    sortable: true,
+  },
+  {
+    key: "name",
+    label: "PIC Pengerjaan",
+    sortable: true,
+  },
+];
 
-const enforceNumberInput = (event: Event) => {
-  const input = event.target as HTMLInputElement;
+const filteredRows = computed(() => {
+  const indexedRows = rows.value?.map((data, index) => ({
+    ...data,
+    id: index + 1,
+  }));
 
-  let newValue = input.value.replace(/[^0-9]/g, "");
-
-  input.value = newValue;
-};
-
-const enforceDecimalInput = (event: Event) => {
-  const input = event.target as HTMLInputElement;
-
-  let newValue = input.value.replace(/[^0-9.]/g, "");
-
-  const parts = newValue.split(".");
-  if (parts.length > 2) {
-    newValue = parts[0] + "." + parts.slice(1).join("");
+  if (!q.value) {
+    return indexedRows;
   }
 
-  input.value = newValue;
-};
+  return indexedRows?.filter((data) => {
+    return Object.values(data).some((value) => {
+      return String(value).toLowerCase().includes(q.value.toLowerCase());
+    });
+  });
+});
+
+const paginatedRows = computed(() => {
+  return filteredRows.value?.slice(
+    (page.value - 1) * pageCount,
+    page.value * pageCount
+  );
+});
 </script>
 
 <template>
-  <a href="/" class="hover:underline hover:underline-offset-4">🠠 BACK</a>
-  <br /><br />
-  <h1 class="mb-6">Packing Data Entry</h1>
-
-  <UForm :state="formData" @submit="submitData" class="space-y-6">
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-      <UFormGroup required>
-        <Input label="Date Time">
+  <div>
+    <h1>Manage PICs</h1>
+    <br />
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
+      <UForm @submit="addPIC">
+        <Input label="Nama PIC Pengerjaan">
           <UInput
-            v-model="formData.datetime"
-            type="datetime-local"
+            v-model="newPIC.name"
+            placeholder="New Name..."
+            required
             variant="none"
-            placeholder="Date Time..."
-            :required="true"
           />
         </Input>
-      </UFormGroup>
-
-      <UFormGroup required>
-        <Input label="PIC Pengerjaan">
-          <UInput
-            v-model="formData.pic"
-            type="text"
-            variant="none"
-            placeholder="PIC Pengerjaan..."
-            :required="true"
-          />
-        </Input>
-      </UFormGroup>
-    </div>
-
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-      <UFormGroup required>
-        <Input label="Weight (kg)">
-          <UInput
-            v-model="formData.weight"
-            type="decimal"
-            variant="none"
-            placeholder="0"
-            :required="true"
-            :step="0.1"
-            :min="0"
-            @input="enforceDecimalInput"
-          />
-        </Input>
-      </UFormGroup>
-
-      <UFormGroup required>
-        <Input label="Reject (Kg) per jam">
-          <UInput
-            v-model="formData.reject"
-            type="decimal"
-            variant="none"
-            placeholder="0"
-            :required="true"
-            :step="0.1"
-            :min="0"
-            @input="enforceDecimalInput"
-          />
-        </Input>
-      </UFormGroup>
-    </div>
-
-    <div class="border-t dark:border-gray-700 pt-6">
-      <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-        Quantities
-      </h2>
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-        <UFormGroup required>
-          <Input label="Qty Pack A per jam">
-            <UInput
-              v-model="formData.qtyA"
-              type="decimal"
-              variant="none"
-              placeholder="0"
-              :required="true"
-              :min="0"
-              @input="enforceNumberInput"
-            />
+        <br />
+        <Button
+          type="submit"
+          icon="i-heroicons-document-check"
+          label="SUBMIT DATA"
+        />
+      </UForm>
+      <div class="col-span-2">
+        <div class="w-1/4">
+          <Input label="Cari PIC Pengerjaan">
+            <UInput v-model="q" variant="none" placeholder="Search..." />
           </Input>
-        </UFormGroup>
-
-        <UFormGroup required>
-          <Input label="Qty Pack B per jam">
-            <UInput
-              v-model="formData.qtyB"
-              type="decimal"
-              variant="none"
-              placeholder="0"
-              :required="true"
-              :min="0"
-              @input="enforceNumberInput"
-            />
-          </Input>
-        </UFormGroup>
-
-        <UFormGroup required>
-          <Input label="Qty Pack C per jam">
-            <UInput
-              v-model="formData.qtyC"
-              type="decimal"
-              variant="none"
-              placeholder="0"
-              :required="true"
-              :min="0"
-              @input="enforceNumberInput"
-            />
-          </Input>
-        </UFormGroup>
+        </div>
+        <br />
+        <UTable :rows="paginatedRows" :columns="columns" />
+        <div
+          class="flex justify-end px-3 py-3.5 border-t border-gray-200 dark:border-gray-700"
+        >
+          <UPagination
+            v-model="page"
+            :page-count="pageCount"
+            :total="filteredRows?.length || 0"
+            class="custom-pagination"
+          />
+        </div>
       </div>
     </div>
-
-    <div class="flex justify-end mt-16 gap-8">
-      <Button
-        type="button"
-        icon="i-heroicons-x-mark"
-        label="CLEAR"
-        @click="ClearForm"
-      />
-      <Button
-        type="submit"
-        icon="i-heroicons-document-check"
-        label="SUBMIT DATA"
-      />
-    </div>
-  </UForm>
+  </div>
 </template>

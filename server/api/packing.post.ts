@@ -7,11 +7,11 @@ export default defineEventHandler(async (event) => {
     data: {
       datetime: new Date(body.datetime),
       pic: body.pic,
-      weight: body.weight,
-      qtyA: body.qtyA,
-      qtyB: body.qtyB,
-      qtyC: body.qtyC,
-      reject: body.reject,
+      weight: parseFloat(body.weight),
+      qtyA: parseInt(body.qtyA, 10),
+      qtyB: parseInt(body.qtyB, 10),
+      qtyC: parseInt(body.qtyC, 10),
+      reject: parseFloat(body.reject),
     },
   });
   return { success: true, data: newPackingData };

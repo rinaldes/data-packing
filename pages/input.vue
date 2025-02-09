@@ -1,4 +1,11 @@
 <script setup lang="ts">
+const { data: picsResponse } = useFetch("/api/pic");
+const pics = computed(
+  () =>
+    picsResponse.value?.data?.map((p) => ({ value: p.name, label: p.name })) ??
+    []
+);
+
 const formData = reactive({
   datetime: "",
   pic: "",
@@ -67,12 +74,12 @@ const enforceDecimalInput = (event: Event) => {
       </UFormGroup>
 
       <UFormGroup required>
-        <Input label="PIC Pengerjaan">
-          <UInput
+        <Input label="PIC Packing">
+          <USelect
             v-model="formData.pic"
-            type="text"
+            :options="pics"
             variant="none"
-            placeholder="PIC Pengerjaan..."
+            placeholder="PIC Packing..."
             :required="true"
           />
         </Input>
