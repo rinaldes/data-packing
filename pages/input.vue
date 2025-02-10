@@ -1,5 +1,6 @@
 <script setup lang="ts">
 const { data: picsResponse } = useFetch("/api/pic");
+const toast = useToast();
 const pics = computed(
   () =>
     picsResponse.value?.data?.map((p) => ({ value: p.name, label: p.name })) ??
@@ -9,23 +10,45 @@ const pics = computed(
 const formData = reactive({
   datetime: "",
   pic: "",
-  weight: undefined,
+  weight: 0,
   qtyA: undefined,
   qtyB: undefined,
   qtyC: undefined,
   reject: undefined,
 });
 
+watch(
+  () => [formData.reject, formData.qtyA, formData.qtyB, formData.qtyC],
+  () => {
+    const reject = Number(formData.reject) || 0; // Convert to number
+    const qtyA = Number(formData.qtyA) || 0; // Convert to number
+    const qtyB = Number(formData.qtyB) || 0; // Convert to number
+    const qtyC = Number(formData.qtyC) || 0;
+    console.log("Reject ori:", reject);
+
+    // Calculate the weight based on the formula
+    formData.weight = reject + (0.2 * qtyA + 0.3 * qtyB + 0.4 * qtyC);
+
+    // Optional: Format the weight to show only one decimal place
+    formData.weight = formData.weight;
+  },
+  { immediate: true } // This will also run the calculation immediately on initial load
+);
+
 async function submitData() {
-  await useFetch("/api/packing", { method: "POST", body: formData });
-  alert("Data submitted!");
+  try {
+    await useFetch("/api/packing", { method: "POST", body: formData });
+    toast.add({ title: "Data Saved!" });
+    ClearForm();
+  } catch (error) {
+    toast.add({ title: "Error!", color: "red" });
+  }
 }
 
 const ClearForm = () => {
-  console.log("Button clicked!");
   formData.datetime = "";
   formData.pic = "";
-  formData.weight = undefined;
+  formData.weight = 0;
   formData.qtyA = undefined;
   formData.qtyB = undefined;
   formData.qtyC = undefined;
@@ -93,11 +116,8 @@ const enforceDecimalInput = (event: Event) => {
             v-model="formData.weight"
             type="decimal"
             variant="none"
-            placeholder="0"
             :required="true"
-            :step="0.1"
-            :min="0"
-            @input="enforceDecimalInput"
+            :disabled="true"
           />
         </Input>
       </UFormGroup>
@@ -173,6 +193,7 @@ const enforceDecimalInput = (event: Event) => {
         icon="i-heroicons-x-mark"
         label="CLEAR"
         @click="ClearForm"
+        color="crown-of-thorns"
       />
       <Button
         type="submit"

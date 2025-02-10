@@ -1,48 +1,151 @@
 <script setup lang="ts">
-import { defineProps } from "vue";
+import { defineProps, computed } from "vue";
+import type { PackingType } from "@/types/PackingType";
+import dayjs from "dayjs";
+
 import {
   Chart as ChartJS,
-  PieController,
-  ArcElement,
+  CategoryScale,
+  LinearScale,
+  BarElement,
   Title,
   Tooltip,
   Legend,
 } from "chart.js";
-import { Pie } from "vue-chartjs";
+import { Bar } from "vue-chartjs";
 
-ChartJS.register(PieController, ArcElement, Title, Tooltip, Legend);
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend
+);
 
 const props = defineProps({
-  data: Object,
+  data: Array as () => PackingType[],
+  filterType: String as () => "hourly" | "daily",
+  maxTicks: Number, // Max number of ticks (default: 10, set in parent)
 });
 
-let totalPackA = 0;
-let totalPackB = 0;
-let totalPackC = 0;
+// ✅ Group data by time and calculate ratios for qtyA, qtyB, qtyC
+const groupedData = computed(() => {
+  const grouped = new Map();
 
-props.data?.forEach((item) => {
-  totalPackA +=
-    (item["qtyA"] / (item["qtyA"] + item["qtyB"] + item["qtyC"])) * 100;
-  totalPackB +=
-    (item["qtyB"] / (item["qtyA"] + item["qtyB"] + item["qtyC"])) * 100;
-  totalPackC +=
-    (item["qtyC"] / (item["qtyA"] + item["qtyB"] + item["qtyC"])) * 100;
+  props.data?.forEach((entry) => {
+    const timeKey =
+      props.filterType === "hourly"
+        ? dayjs(entry.datetime).format("DD/MM HH:00") // Hourly
+        : dayjs(entry.datetime).format("DD/MM"); // Daily
+
+    if (!grouped.has(timeKey)) {
+      grouped.set(timeKey, {
+        datetime: timeKey,
+        totalQtyA: 0,
+        totalQtyB: 0,
+        totalQtyC: 0,
+      });
+    }
+
+    const dataEntry = grouped.get(timeKey);
+    dataEntry.totalQtyA += entry.qtyA;
+    dataEntry.totalQtyB += entry.qtyB;
+    dataEntry.totalQtyC += entry.qtyC;
+  });
+
+  // Calculate ratios
+  return Array.from(grouped.values()).map((entry) => {
+    const total = entry.totalQtyA + entry.totalQtyB + entry.totalQtyC;
+    return {
+      datetime: entry.datetime,
+      qtyARatio: total > 0 ? (entry.totalQtyA / total) * 100 : 0,
+      qtyBRatio: total > 0 ? (entry.totalQtyB / total) * 100 : 0,
+      qtyCRatio: total > 0 ? (entry.totalQtyC / total) * 100 : 0,
+    };
+  });
 });
 
-const chartData = {
-  labels: ["Pack A", "Pack B", "Pack C"],
-  datasets: [{ data: [totalPackA, totalPackB, totalPackC] }],
-};
+// ✅ Extract timestamps for X-axis & apply max tick filtering
+const filteredTimestamps = computed(() => {
+  const labels = groupedData.value.map((entry) => entry.datetime);
+  const maxTicks = props.maxTicks || 10; // Default to 10 if not provided
 
-const chartOptions = {
+  if (labels.length <= maxTicks) {
+    return labels;
+  }
+
+  // Evenly select `maxTicks` labels
+  const step = Math.ceil(labels.length / maxTicks);
+  return labels.filter((_, index) => index % step === 0);
+});
+
+// ✅ Filter dataset to match the filtered timestamps
+const filteredData = computed(() => {
+  return groupedData.value.filter((entry) =>
+    filteredTimestamps.value.includes(entry.datetime)
+  );
+});
+
+// ✅ Chart Data
+const chartData = computed(() => ({
+  labels: filteredTimestamps.value,
+  datasets: [
+    {
+      label: "Pack A Ratio (%)",
+      data: filteredData.value.map((entry) => entry.qtyARatio),
+      backgroundColor: "rgba(255, 99, 132, 0.6)",
+      borderColor: "rgba(255, 99, 132, 1)",
+      borderWidth: 2,
+    },
+    {
+      label: "Pack B Ratio (%)",
+      data: filteredData.value.map((entry) => entry.qtyBRatio),
+      backgroundColor: "rgba(54, 162, 235, 0.6)",
+      borderColor: "rgba(54, 162, 235, 1)",
+      borderWidth: 2,
+    },
+    {
+      label: "Pack C Ratio (%)",
+      data: filteredData.value.map((entry) => entry.qtyCRatio),
+      backgroundColor: "rgba(75, 192, 192, 0.6)",
+      borderColor: "rgba(75, 192, 192, 1)",
+      borderWidth: 2,
+    },
+  ],
+}));
+
+const chartOptions = computed(() => ({
   responsive: true,
   maintainAspectRatio: false,
-};
+  scales: {
+    y: {
+      beginAtZero: true,
+      title: {
+        display: true,
+        text: "Percentage (%)",
+      },
+    },
+    x: {
+      title: {
+        display: true,
+        text: props.filterType === "hourly" ? "Hour" : "Date",
+      },
+      ticks: {
+        autoSkip: false, // Disable auto-skip since we handle it manually
+        maxTicksLimit: props.maxTicks || 10, // Use maxTicks from props
+      },
+    },
+  },
+}));
 </script>
 
 <template>
-  <div class="h-64 w-full">
-    <h2>Pack Ratio (%)</h2>
-    <Pie :data="chartData" :options="chartOptions" />
+  <div class="h-64">
+    <h3 class="text-xl font-medium text-center">
+      {{ filterType === "hourly" ? "Hourly" : "Daily" }} Pack Quantity Ratios
+      (%)
+    </h3>
+    <Bar :data="chartData" :options="chartOptions" />
   </div>
 </template>

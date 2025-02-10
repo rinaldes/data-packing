@@ -3,6 +3,7 @@ defineProps<{
   label?: string;
   icon?: string;
   type?: string;
+  color?: ButtonColor;
 }>();
 
 const emit = defineEmits<{
@@ -13,11 +14,13 @@ const emit = defineEmits<{
 <template>
   <UButton
     :type="type"
-    color="primary"
+    :color="color"
     :icon="icon"
     size="lg"
     @click="emit('click')"
-    class="py-4 font-medium rounded-none justify-center w-52 hover:bg-color-plantation-500 hover:opacity-80"
+    :class="`py-4 font-medium rounded-none justify-center w-52 hover:bg-color-${
+      color ?? 'plantation'
+    }-500 hover:opacity-80`"
   >
     {{ label }}
   </UButton>

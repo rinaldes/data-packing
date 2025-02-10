@@ -27,36 +27,101 @@ ChartJS.register(
 
 const props = defineProps({
   data: Array as () => PackingType[],
+  filterType: String as () => "hourly" | "daily",
+  maxTicks: Number, // Max number of ticks (default: 10, set in parent)
 });
 
-const chartData = computed(() => ({
-  labels: props.data?.map((entry) => dayjs(entry.datetime).format("HH:mm")),
-  datasets: [
-    {
-      label: "Quantity A",
-      data: props.data?.map((entry) => entry.qtyA),
-      backgroundColor: "rgba(54, 162, 235, 0.6)",
-      borderColor: "rgba(54, 162, 235, 1)",
-      borderWidth: 1,
-    },
-    {
-      label: "Quantity A",
-      data: props.data?.map((entry) => entry.qtyA),
-      backgroundColor: "rgba(54, 162, 235, 0.6)",
-      borderColor: "rgba(54, 162, 235, 1)",
-      borderWidth: 1,
-    },
-  ],
-}));
+// ✅ Group data by time & PIC
+const groupedData = computed(() => {
+  const grouped = new Map();
 
-const chartOptions = {
+  props.data?.forEach((entry) => {
+    const timeKey =
+      props.filterType === "hourly"
+        ? dayjs(entry.datetime).format("DD/MM HH:00") // Hourly
+        : dayjs(entry.datetime).format("DD/MM"); // Daily
+
+    if (!grouped.has(timeKey)) {
+      grouped.set(timeKey, {});
+    }
+
+    const dataEntry = grouped.get(timeKey);
+    dataEntry[entry.pic] =
+      (dataEntry[entry.pic] || 0) + entry.qtyA + entry.qtyB + entry.qtyC;
+  });
+
+  return grouped;
+});
+
+const filteredTimestamps = computed(() => {
+  const labels = Array.from(groupedData.value.keys());
+  const maxTicks = props.maxTicks || 10;
+
+  if (labels.length <= maxTicks) {
+    return labels;
+  }
+
+  const step = Math.ceil(labels.length / maxTicks);
+  return labels.filter((_, index) => index % step === 0);
+});
+
+// ✅ Filter dataset to match the filtered timestamps
+const filteredData = computed(() => {
+  return Array.from(groupedData.value.entries())
+    .filter(([key]) => filteredTimestamps.value.includes(key))
+    .map(([key, value]) => ({ datetime: key, ...value }));
+});
+
+// ✅ Generate PIC datasets with random colors
+const generateRandomColor = () =>
+  `hsl(${Math.floor(Math.random() * 360)}, ${
+    Math.floor(Math.random() * 50) + 50
+  }%, ${Math.floor(Math.random() * 40) + 40}%)`;
+
+const chartData = computed(() => {
+  const uniquePics = new Set(props.data?.map((entry) => entry.pic));
+  return {
+    labels: filteredTimestamps.value,
+    datasets: Array.from(uniquePics).map((pic) => ({
+      label: pic,
+      data: filteredData.value.map((entry) => entry[pic] || 0),
+      backgroundColor: generateRandomColor(),
+      borderColor: generateRandomColor(),
+      borderWidth: 2,
+    })),
+  };
+});
+
+const chartOptions = computed(() => ({
   responsive: true,
   maintainAspectRatio: false,
-};
+  scales: {
+    y: {
+      beginAtZero: true,
+      title: {
+        display: true,
+        text: "Quantity",
+      },
+    },
+    x: {
+      title: {
+        display: true,
+        text: props.filterType === "hourly" ? "Hour" : "Date",
+      },
+      ticks: {
+        autoSkip: false,
+        maxTicksLimit: props.maxTicks || 10,
+      },
+    },
+  },
+}));
 </script>
 
 <template>
   <div class="h-64">
+    <h3 class="text-xl font-medium text-center">
+      {{ filterType === "hourly" ? "Hourly" : "Daily" }} Quantity per PIC
+    </h3>
     <Line :data="chartData" :options="chartOptions" />
   </div>
 </template>
