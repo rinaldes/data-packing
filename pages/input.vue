@@ -1,27 +1,15 @@
 <script setup lang="ts">
-const { data: picsResponse } = useFetch("/api/pic");
 const toast = useToast();
+const isLoading = ref(true);
+const currentDateTime = ref("");
+
+const { data: picsResponse } = useFetch("/api/pic");
+
 const pics = computed(
   () =>
     picsResponse.value?.data?.map((p) => ({ value: p.name, label: p.name })) ??
     []
 );
-
-const currentDateTime = ref("");
-onMounted(() => {
-  currentDateTime.value = new Date().toISOString().slice(0, 16);
-
-  const date = new Date(currentDateTime.value);
-
-  date.setHours(date.getHours() + 14);
-
-  const updatedTime = date.toISOString().slice(0, 16);
-  console.log("Updated DateTime:", updatedTime);
-  console.log("old DateTime:", currentDateTime.value);
-
-  formData.datetime = updatedTime;
-  console.log("Current DateTime:", updatedTime);
-});
 
 const formData = reactive({
   datetime: "",
@@ -32,34 +20,6 @@ const formData = reactive({
   qtyC: undefined,
   reject: undefined,
 });
-
-watch(
-  () => [formData.reject, formData.qtyA, formData.qtyB, formData.qtyC],
-  () => {
-    const reject = Number(formData.reject) || 0;
-    const qtyA = Number(formData.qtyA) || 0;
-    const qtyB = Number(formData.qtyB) || 0;
-    const qtyC = Number(formData.qtyC) || 0;
-    console.log("Reject ori:", reject);
-
-    formData.weight = reject + (0.2 * qtyA + 0.3 * qtyB + 0.4 * qtyC);
-
-    formData.weight = formData.weight;
-  },
-  { immediate: true } // This will also run the calculation immediately on initial load
-);
-
-async function submitData() {
-  if (confirm("Are you sure you want to save this packing report?")) {
-    try {
-      await useFetch("/api/packing", { method: "POST", body: formData });
-      toast.add({ title: "Data Saved!" });
-      ClearForm();
-    } catch (error) {
-      toast.add({ title: "Error!", color: "red" });
-    }
-  }
-}
 
 const ClearForm = () => {
   formData.datetime = "";
@@ -91,6 +51,47 @@ const enforceDecimalInput = (event: Event) => {
 
   input.value = newValue;
 };
+
+async function submitData() {
+  if (confirm("Are you sure you want to save this packing report?")) {
+    try {
+      await useFetch("/api/packing", { method: "POST", body: formData });
+      toast.add({ title: "Data Saved!" });
+      ClearForm();
+    } catch (error) {
+      toast.add({ title: "Error!", color: "red" });
+    }
+  }
+}
+
+watch(
+  () => [formData.reject, formData.qtyA, formData.qtyB, formData.qtyC],
+  () => {
+    const reject = Number(formData.reject) || 0;
+    const qtyA = Number(formData.qtyA) || 0;
+    const qtyB = Number(formData.qtyB) || 0;
+    const qtyC = Number(formData.qtyC) || 0;
+    console.log("Reject ori:", reject);
+
+    formData.weight = reject + (0.2 * qtyA + 0.3 * qtyB + 0.4 * qtyC);
+
+    formData.weight = formData.weight;
+  },
+  { immediate: true }
+);
+
+onMounted(() => {
+  currentDateTime.value = new Date().toISOString().slice(0, 16);
+
+  const date = new Date(currentDateTime.value);
+
+  date.setHours(date.getHours() + 14);
+
+  const updatedTime = date.toISOString().slice(0, 16);
+
+  formData.datetime = updatedTime;
+  isLoading.value = false;
+});
 </script>
 
 <template>
@@ -106,10 +107,10 @@ const enforceDecimalInput = (event: Event) => {
             v-model="formData.datetime"
             type="datetime-local"
             variant="none"
-            placeholder="Date Time..."
             :required="true"
             :value="currentDateTime"
-            :max="currentDateTime"
+            :loading="isLoading"
+            :disabled="isLoading"
           />
         </Input>
       </UFormGroup>
@@ -122,6 +123,8 @@ const enforceDecimalInput = (event: Event) => {
             variant="none"
             placeholder="PIC Packing..."
             :required="true"
+            :loading="isLoading"
+            :disabled="isLoading"
           />
         </Input>
       </UFormGroup>
@@ -151,6 +154,8 @@ const enforceDecimalInput = (event: Event) => {
             :step="0.1"
             :min="0"
             @input="enforceDecimalInput"
+            :loading="isLoading"
+            :disabled="isLoading"
           />
         </Input>
       </UFormGroup>
@@ -160,7 +165,7 @@ const enforceDecimalInput = (event: Event) => {
       <h2 class="mb-4">Quantities</h2>
       <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
         <UFormGroup required>
-          <Input label="Qty Pack A per jam">
+          <Input label="Qty Pack A (0.2 kg) per jam">
             <UInput
               v-model="formData.qtyA"
               type="decimal"
@@ -169,12 +174,14 @@ const enforceDecimalInput = (event: Event) => {
               :required="true"
               :min="0"
               @input="enforceNumberInput"
+              :loading="isLoading"
+              :disabled="isLoading"
             />
           </Input>
         </UFormGroup>
 
         <UFormGroup required>
-          <Input label="Qty Pack B per jam">
+          <Input label="Qty Pack B (0.3 kg) per jam">
             <UInput
               v-model="formData.qtyB"
               type="decimal"
@@ -183,12 +190,14 @@ const enforceDecimalInput = (event: Event) => {
               :required="true"
               :min="0"
               @input="enforceNumberInput"
+              :loading="isLoading"
+              :disabled="isLoading"
             />
           </Input>
         </UFormGroup>
 
         <UFormGroup required>
-          <Input label="Qty Pack C per jam">
+          <Input label="Qty Pack C (0.4 kg) per jam">
             <UInput
               v-model="formData.qtyC"
               type="decimal"
@@ -197,6 +206,8 @@ const enforceDecimalInput = (event: Event) => {
               :required="true"
               :min="0"
               @input="enforceNumberInput"
+              :loading="isLoading"
+              :disabled="isLoading"
             />
           </Input>
         </UFormGroup>
@@ -210,11 +221,15 @@ const enforceDecimalInput = (event: Event) => {
         label="CLEAR"
         @click="ClearForm"
         color="crown-of-thorns"
+        :loading="isLoading"
+        :disabled="isLoading"
       />
       <Button
         type="submit"
         icon="i-heroicons-document-check"
         label="SUBMIT DATA"
+        :loading="isLoading"
+        :disabled="isLoading"
       />
     </div>
   </UForm>

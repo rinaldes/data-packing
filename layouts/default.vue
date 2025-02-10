@@ -2,12 +2,10 @@
 const links = [
   {
     label: "PACKING DATA",
-    icon: "i-heroicons-home",
     to: "/",
   },
   {
     label: "PIC",
-    icon: "i-heroicons-users",
     to: "/pic",
   },
 ];
@@ -18,7 +16,7 @@ const links = [
     <nav
       class="flex flex-row gap-16 justify-center md:justify-end text-crown-of-thorns-500"
     >
-      <a
+      <NuxtLink
         v-for="item in links"
         :href="item.to"
         class="flex items-center gap-2 hover:underline-offset-8 hover:underline"
@@ -28,7 +26,7 @@ const links = [
             ? 'underline-offset-8 underline'
             : 'font-normal'
         "
-        >{{ item.label }}</a
+        >{{ item.label }}</NuxtLink
       >
     </nav>
     <div class="flex-1 py-10">

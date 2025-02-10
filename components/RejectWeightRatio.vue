@@ -26,18 +26,17 @@ ChartJS.register(
 const props = defineProps({
   data: Array as () => PackingType[],
   filterType: String as () => "hourly" | "daily",
-  maxTicks: Number, // Max number of ticks (default: 10, set in parent)
+  maxTicks: Number,
 });
 
-// ✅ Group data by time & calculate reject-to-weight ratio
 const groupedData = computed(() => {
   const grouped = new Map();
 
   props.data?.forEach((entry) => {
     const timeKey =
       props.filterType === "hourly"
-        ? dayjs(entry.datetime).format("DD/MM HH:00") // Hourly
-        : dayjs(entry.datetime).format("DD/MM"); // Daily
+        ? dayjs(entry.datetime).format("DD/MM HH:00")
+        : dayjs(entry.datetime).format("DD/MM");
 
     if (!grouped.has(timeKey)) {
       grouped.set(timeKey, {
@@ -59,28 +58,24 @@ const groupedData = computed(() => {
   }));
 });
 
-// ✅ Extract timestamps for X-axis & apply max tick filtering
 const filteredTimestamps = computed(() => {
   const labels = groupedData.value.map((entry) => entry.datetime);
-  const maxTicks = props.maxTicks || 10; // Default to 10 if not provided
+  const maxTicks = props.maxTicks || 10;
 
   if (labels.length <= maxTicks) {
     return labels;
   }
 
-  // Evenly select `maxTicks` labels
   const step = Math.ceil(labels.length / maxTicks);
   return labels.filter((_, index) => index % step === 0);
 });
 
-// ✅ Filter dataset to match the filtered timestamps
 const filteredData = computed(() => {
   return groupedData.value.filter((entry) =>
     filteredTimestamps.value.includes(entry.datetime)
   );
 });
 
-// ✅ Chart Data
 const chartData = computed(() => ({
   labels: filteredTimestamps.value,
   datasets: [
@@ -111,8 +106,8 @@ const chartOptions = computed(() => ({
         text: props.filterType === "hourly" ? "Hour" : "Date",
       },
       ticks: {
-        autoSkip: false, // Disable auto-skip since we handle it manually
-        maxTicksLimit: props.maxTicks || 10, // Use maxTicks from props
+        autoSkip: false,
+        maxTicksLimit: props.maxTicks || 10,
       },
     },
   },

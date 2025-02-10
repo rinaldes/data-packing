@@ -1,20 +1,19 @@
 <script setup lang="ts">
 import dayjs from "dayjs";
 const toast = useToast();
-
+const isLoading = ref(true);
 const { data: reports, refresh } = await useFetch("/api/reports");
 
 const page = ref(1);
 const pageCount = 10;
 const q = ref("");
+const search = ref("");
 const tick = ref(10);
 const selected = ref<"hourly" | "daily">("hourly");
-
 const methods = [
   { value: "daily", label: "Daily" },
   { value: "hourly", label: "Hourly" },
 ];
-
 const rows = ref(reports?.value?.data);
 const columns = [
   {
@@ -63,21 +62,6 @@ const columns = [
   },
 ];
 
-async function editReport(id: string) {
-  navigateTo(`/${id}`);
-}
-
-async function deleteReport(id: string) {
-  if (confirm("Are you sure you want to delete this packing report?")) {
-    await useFetch(`/api/reports/${id}`, {
-      method: "DELETE",
-    });
-    await refresh();
-    rows.value = rows.value?.filter((report) => report.id !== id);
-    toast.add({ title: "Report deleted successfully!" });
-  }
-}
-
 const filteredRows = computed(() => {
   const indexedRows = rows.value?.map((data, index) => ({
     ...data,
@@ -103,17 +87,45 @@ const filteredRows = computed(() => {
     ],
   }));
 
-  if (!q.value) {
-    return indexedRows;
-  }
+  let filtered = indexedRows;
 
-  return indexedRows
-    ?.filter((data) => {
-      return Object.values(data).some((value) => {
-        return String(value).toLowerCase().includes(q.value.toLowerCase());
-      });
-    })
-    .slice((page.value - 1) * pageCount, page.value * pageCount);
+  if (q.value) {
+    filtered = indexedRows?.filter((data) =>
+      Object.values(data).some((value) =>
+        String(value).toLowerCase().includes(q.value.toLowerCase())
+      )
+    );
+  }
+  return filtered;
+});
+
+async function editReport(id: string) {
+  navigateTo(`/${id}`);
+}
+
+async function deleteReport(id: string) {
+  if (confirm("Are you sure you want to delete this packing report?")) {
+    await useFetch(`/api/reports/${id}`, {
+      method: "DELETE",
+    });
+    await refresh();
+    rows.value = rows.value?.filter((report) => report.id !== id);
+    toast.add({ title: "Report deleted successfully!" });
+  }
+}
+
+const debouncedSetQuery = useDebounceFn((newQuery: string) => {
+  q.value = newQuery;
+  page.value = 1;
+}, 700);
+
+watch(search, (newQuery) => {
+  debouncedSetQuery(newQuery);
+});
+
+onMounted(async () => {
+  await refresh();
+  isLoading.value = false;
 });
 </script>
 
@@ -128,15 +140,27 @@ const filteredRows = computed(() => {
         label="ADD PACKING"
         icon="i-heroicons-plus"
         class="w-full md:w-auto"
+        :disabled="isLoading"
+        :loading="isLoading"
       />
     </a>
     <div class="w-full mb-4 md:w-1/4">
       <Input>
-        <UInput v-model="q" variant="none" placeholder="Search..." />
+        <UInput
+          v-model="search"
+          variant="none"
+          placeholder="Search..."
+          :disabled="isLoading"
+          :loading="isLoading"
+        />
       </Input>
     </div>
   </div>
-  <UTable :rows="filteredRows" :columns="columns" class="whitespace-nowrap">
+  <UTable
+    :rows="filteredRows?.slice((page - 1) * pageCount, page * pageCount)"
+    :columns="columns"
+    class="whitespace-nowrap"
+  >
     <template #actions-data="{ row }">
       <div class="flex justify-end gap-2">
         <UButton
@@ -145,6 +169,8 @@ const filteredRows = computed(() => {
           :icon="action.icon"
           @click="action.onClick"
           :class="`rounded-none bg-${action.color}-500 hover:bg-${action.color}-500 hover:opacity-75`"
+          :disabled="isLoading"
+          :loading="isLoading"
         >
           {{ action.label }}
         </UButton>
@@ -157,7 +183,7 @@ const filteredRows = computed(() => {
     <UPagination
       v-model="page"
       :page-count="pageCount"
-      :total="rows?.length || 0"
+      :total="filteredRows?.length || 0"
       class="custom-pagination"
     />
   </div>
@@ -169,8 +195,9 @@ const filteredRows = computed(() => {
           v-model="tick"
           type="number"
           placeholder="Max Ticks"
-          :ui="{ rounded: 'rounded-none' }"
           variant="none"
+          :disabled="isLoading"
+          :loading="isLoading"
         />
       </Input>
     </div>
@@ -180,10 +207,15 @@ const filteredRows = computed(() => {
         :key="method.value"
         v-model="selected"
         v-bind="method"
+        :disabled="isLoading"
+        :loading="isLoading"
       />
     </div>
   </div>
-  <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-8 mt-8">
+  <div v-if="isLoading" class="flex justify-center items-center mt-8">
+    <h2>Loading Chart...</h2>
+  </div>
+  <div v-else class="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-8 mt-8">
     <QtyPerHourPerPIC :data="rows" :filter-type="selected" :maxTicks="tick" />
     <QtyPerHourPerModelPack
       :data="rows"

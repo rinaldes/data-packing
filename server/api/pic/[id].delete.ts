@@ -6,11 +6,11 @@ export default defineEventHandler(async (event) => {
   const id = event.context.params?.id;
 
   try {
-    const deletedReport = await prisma.packingData.delete({
+    const deletePic = await prisma.pic.delete({
       where: { id },
     });
 
-    if (!deletedReport) {
+    if (!deletePic) {
       return sendError(
         event,
         createError({ statusCode: 404, message: "Report not found" })

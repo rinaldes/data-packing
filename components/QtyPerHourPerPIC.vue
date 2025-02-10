@@ -28,18 +28,17 @@ ChartJS.register(
 const props = defineProps({
   data: Array as () => PackingType[],
   filterType: String as () => "hourly" | "daily",
-  maxTicks: Number, // Max number of ticks (default: 10, set in parent)
+  maxTicks: Number,
 });
 
-// ✅ Group data by time & PIC
 const groupedData = computed(() => {
   const grouped = new Map();
 
   props.data?.forEach((entry) => {
     const timeKey =
       props.filterType === "hourly"
-        ? dayjs(entry.datetime).format("DD/MM HH:00") // Hourly
-        : dayjs(entry.datetime).format("DD/MM"); // Daily
+        ? dayjs(entry.datetime).format("DD/MM HH:00")
+        : dayjs(entry.datetime).format("DD/MM");
 
     if (!grouped.has(timeKey)) {
       grouped.set(timeKey, {});
@@ -65,14 +64,12 @@ const filteredTimestamps = computed(() => {
   return labels.filter((_, index) => index % step === 0);
 });
 
-// ✅ Filter dataset to match the filtered timestamps
 const filteredData = computed(() => {
   return Array.from(groupedData.value.entries())
     .filter(([key]) => filteredTimestamps.value.includes(key))
     .map(([key, value]) => ({ datetime: key, ...value }));
 });
 
-// ✅ Generate PIC datasets with random colors
 const generateRandomColor = () =>
   `hsl(${Math.floor(Math.random() * 360)}, ${
     Math.floor(Math.random() * 50) + 50
