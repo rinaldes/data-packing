@@ -11,9 +11,15 @@ body {
 }
 
 h1 {
-  @apply text-4xl text-crown-of-thorns-500 font-semibold;
+  @apply text-4xl text-crown-of-thorns-500 font-semibold text-center md:text-left;
   font-family: "Apice";
 }
+
+h2 {
+  @apply text-2xl font-semibold text-crown-of-thorns-500 text-center md:text-left;
+  font-family: "Apice";
+}
+
 p {
   @apply text-lg;
 }

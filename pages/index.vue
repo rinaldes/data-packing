@@ -118,25 +118,25 @@ const filteredRows = computed(() => {
 </script>
 
 <template>
-  <h1 class="mb-4">Dashboard</h1>
+  <h1 class="mb-4">Packing Data</h1>
   <div
-    class="flex justify-between px-3 py-3.5 border-b border-gray-200 dark:border-gray-700"
+    class="md:flex w-full md:flex-row-reverse justify-between px-3 py-3.5 border-b border-gray-200 dark:border-gray-700"
   >
-    <div class="w-1/4">
+    <a href="/input">
+      <Button
+        color="primary"
+        label="ADD PACKING"
+        icon="i-heroicons-plus"
+        class="w-full md:w-auto"
+      />
+    </a>
+    <div class="w-full mb-4 md:w-1/4">
       <Input>
         <UInput v-model="q" variant="none" placeholder="Search..." />
       </Input>
     </div>
-    <a href="/input">
-      <Button
-        class="ml-2"
-        color="primary"
-        label="ADD PACKING"
-        icon="i-heroicons-plus"
-      />
-    </a>
   </div>
-  <UTable :rows="filteredRows" :columns="columns">
+  <UTable :rows="filteredRows" :columns="columns" class="whitespace-nowrap">
     <template #actions-data="{ row }">
       <div class="flex justify-end gap-2">
         <UButton
@@ -162,8 +162,8 @@ const filteredRows = computed(() => {
     />
   </div>
   <div class="mt-16">
-    <h1 class="text-2xl">Report</h1>
-    <div class="w-48 mt-4">
+    <h2>Report</h2>
+    <div class="w-full md:w-48 mt-4">
       <Input label="Max Latest Data">
         <UInput
           v-model="tick"
@@ -174,7 +174,7 @@ const filteredRows = computed(() => {
         />
       </Input>
     </div>
-    <div class="flex justify-start gap-4 mt-4">
+    <div class="flex justify-center md:justify-start gap-4 mt-4">
       <URadio
         v-for="method of methods"
         :key="method.value"
@@ -183,7 +183,7 @@ const filteredRows = computed(() => {
       />
     </div>
   </div>
-  <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-8 mt-8">
     <QtyPerHourPerPIC :data="rows" :filter-type="selected" :maxTicks="tick" />
     <QtyPerHourPerModelPack
       :data="rows"

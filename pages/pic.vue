@@ -61,7 +61,7 @@ const paginatedRows = computed(() => {
   <div>
     <h1>Manage PICs</h1>
     <br />
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-y-12 lg:gap-12">
       <UForm @submit="addPIC">
         <Input label="Nama PIC Pengerjaan">
           <UInput
@@ -76,10 +76,11 @@ const paginatedRows = computed(() => {
           type="submit"
           icon="i-heroicons-document-check"
           label="SUBMIT DATA"
+          class="w-full lg:w-auto"
         />
       </UForm>
       <div class="col-span-2">
-        <div class="w-1/4">
+        <div class="w-full md:w-1/4">
           <Input label="Cari PIC Pengerjaan">
             <UInput v-model="q" variant="none" placeholder="Search..." />
           </Input>

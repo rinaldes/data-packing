@@ -3,6 +3,7 @@ defineProps<{
   label?: string;
   icon?: string;
   type?: string;
+  /* @ts-ignore */
   color?: ButtonColor;
 }>();
 

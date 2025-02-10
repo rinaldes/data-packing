@@ -156,9 +156,7 @@ const enforceDecimalInput = (event: Event) => {
       </div>
 
       <div class="border-t dark:border-gray-700 pt-6">
-        <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-          Quantities
-        </h2>
+        <h2 class="mb-4">Quantities</h2>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
           <UFormGroup required>
             <Input label="Qty Pack A per jam">
@@ -202,11 +200,12 @@ const enforceDecimalInput = (event: Event) => {
         </div>
       </div>
 
-      <div class="flex justify-end mt-16 gap-8">
+      <div class="flex justify-end mt-16">
         <Button
           type="submit"
           icon="i-heroicons-document-check"
           label="UPDATE REPORT"
+          class="w-full md:w-auto"
         />
       </div>
     </UForm>

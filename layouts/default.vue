@@ -1,7 +1,7 @@
 <script setup lang="ts">
 const links = [
   {
-    label: "DASHBOARD",
+    label: "PACKING DATA",
     icon: "i-heroicons-home",
     to: "/",
   },
@@ -10,22 +10,20 @@ const links = [
     icon: "i-heroicons-users",
     to: "/pic",
   },
-  {
-    label: "PRODUCT",
-    icon: "i-heroicons-cube",
-    to: "/product",
-  },
 ];
 </script>
 
 <template>
-  <div class="py-12 px-24">
-    <nav class="flex flex-row gap-16 justify-end text-crown-of-thorns-500">
+  <div class="py-12 px-12 md:px-24">
+    <nav
+      class="flex flex-row gap-16 justify-center md:justify-end text-crown-of-thorns-500"
+    >
       <a
         v-for="item in links"
         :href="item.to"
         class="flex items-center gap-2 hover:underline-offset-8 hover:underline"
         :class="
+          (item.to !== '/pic' && $route.path !== '/pic') ||
           item.to === $route.path
             ? 'underline-offset-8 underline'
             : 'font-normal'
