@@ -84,7 +84,7 @@ async function deletePIC(id: string) {
 const debouncedSetQuery = useDebounceFn((newQuery: string) => {
   q.value = newQuery;
   page.value = 1;
-}, 700);
+}, 725);
 
 watch(search, (newQuery) => {
   debouncedSetQuery(newQuery);
