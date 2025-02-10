@@ -7,6 +7,22 @@ const pics = computed(
     []
 );
 
+const currentDateTime = ref("");
+onMounted(() => {
+  currentDateTime.value = new Date().toISOString().slice(0, 16);
+
+  const date = new Date(currentDateTime.value);
+
+  date.setHours(date.getHours() + 14);
+
+  const updatedTime = date.toISOString().slice(0, 16);
+  console.log("Updated DateTime:", updatedTime);
+  console.log("old DateTime:", currentDateTime.value);
+
+  formData.datetime = updatedTime;
+  console.log("Current DateTime:", updatedTime);
+});
+
 const formData = reactive({
   datetime: "",
   pic: "",
@@ -20,28 +36,28 @@ const formData = reactive({
 watch(
   () => [formData.reject, formData.qtyA, formData.qtyB, formData.qtyC],
   () => {
-    const reject = Number(formData.reject) || 0; // Convert to number
-    const qtyA = Number(formData.qtyA) || 0; // Convert to number
-    const qtyB = Number(formData.qtyB) || 0; // Convert to number
+    const reject = Number(formData.reject) || 0;
+    const qtyA = Number(formData.qtyA) || 0;
+    const qtyB = Number(formData.qtyB) || 0;
     const qtyC = Number(formData.qtyC) || 0;
     console.log("Reject ori:", reject);
 
-    // Calculate the weight based on the formula
     formData.weight = reject + (0.2 * qtyA + 0.3 * qtyB + 0.4 * qtyC);
 
-    // Optional: Format the weight to show only one decimal place
     formData.weight = formData.weight;
   },
   { immediate: true } // This will also run the calculation immediately on initial load
 );
 
 async function submitData() {
-  try {
-    await useFetch("/api/packing", { method: "POST", body: formData });
-    toast.add({ title: "Data Saved!" });
-    ClearForm();
-  } catch (error) {
-    toast.add({ title: "Error!", color: "red" });
+  if (confirm("Are you sure you want to save this packing report?")) {
+    try {
+      await useFetch("/api/packing", { method: "POST", body: formData });
+      toast.add({ title: "Data Saved!" });
+      ClearForm();
+    } catch (error) {
+      toast.add({ title: "Error!", color: "red" });
+    }
   }
 }
 
@@ -92,6 +108,8 @@ const enforceDecimalInput = (event: Event) => {
             variant="none"
             placeholder="Date Time..."
             :required="true"
+            :value="currentDateTime"
+            :max="currentDateTime"
           />
         </Input>
       </UFormGroup>

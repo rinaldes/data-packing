@@ -19,7 +19,7 @@ const links = [
 </script>
 
 <template>
-  <div class="py-12 px-32">
+  <div class="py-12 px-24">
     <nav class="flex flex-row gap-16 justify-end text-crown-of-thorns-500">
       <a
         v-for="item in links"

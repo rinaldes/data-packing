@@ -1,5 +1,5 @@
 export type PackingType = {
-  id: number;
+  id: string;
   datetime: string;
   pic: string;
   weight: number;

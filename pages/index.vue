@@ -64,11 +64,11 @@ const columns = [
 ];
 
 async function editReport(id: string) {
-  navigateTo(`/reports/edit/${id}`);
+  navigateTo(`/${id}`);
 }
 
 async function deleteReport(id: string) {
-  if (confirm("Are you sure you want to delete this report?")) {
+  if (confirm("Are you sure you want to delete this packing report?")) {
     await useFetch(`/api/reports/${id}`, {
       method: "DELETE",
     });
@@ -82,7 +82,7 @@ const filteredRows = computed(() => {
   const indexedRows = rows.value?.map((data, index) => ({
     ...data,
     id: index + 1,
-    datetime: dayjs(data.datetime).locale("id").format("DD MMMM YYYY HH:mm"),
+    datetime: dayjs(data.datetime).format("DD MMMM YYYY HH:mm"),
     weight: (
       data.reject +
       (0.2 * data.qtyA + 0.3 * data.qtyB + 0.4 * data.qtyC)
