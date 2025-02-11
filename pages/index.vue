@@ -2,6 +2,14 @@
 import dayjs from "dayjs";
 const toast = useToast();
 const isLoading = ref(true);
+
+const sort = ref({
+  column: ref<
+    "id" | "datetime" | "pic" | "weight" | "qtyA" | "qtyB" | "qtyC" | "reject"
+  >("datetime"),
+  direction: ref<"asc" | "desc">("desc"),
+});
+
 const { data: reports, refresh } = await useFetch("/api/reports");
 
 const page = ref(1);
@@ -19,7 +27,6 @@ const columns = [
   {
     key: "id",
     label: "ID",
-    sortable: true,
   },
   {
     key: "datetime",
@@ -65,7 +72,6 @@ const columns = [
 const filteredRows = computed(() => {
   const indexedRows = rows.value?.map((data, index) => ({
     ...data,
-    id: index + 1,
     datetime: dayjs(data.datetime).format("DD MMMM YYYY HH:mm"),
     weight: (
       data.reject +
@@ -96,7 +102,26 @@ const filteredRows = computed(() => {
       )
     );
   }
-  return filtered;
+
+  filtered?.sort((a, b) => {
+    const valA = a[sort.value.column];
+    const valB = b[sort.value.column];
+
+    if (typeof valA === "number" && typeof valB === "number") {
+      return sort.value.direction === "asc" ? valA - valB : valB - valA;
+    } else {
+      return sort.value.direction === "asc"
+        ? String(valA).localeCompare(String(valB))
+        : String(valB).localeCompare(String(valA));
+    }
+  });
+
+  const new_filtered = filtered?.map((data, index) => ({
+    ...data,
+    id: index + 1,
+  }));
+
+  return new_filtered;
 });
 
 async function editReport(id: string) {
@@ -134,7 +159,7 @@ onMounted(async () => {
   <div
     class="md:flex w-full md:flex-row-reverse justify-between px-3 py-3.5 border-b border-gray-200 dark:border-gray-700"
   >
-    <a href="/input">
+    <NuxtLink to="/input">
       <Button
         color="primary"
         label="ADD PACKING"
@@ -143,7 +168,7 @@ onMounted(async () => {
         :disabled="isLoading"
         :loading="isLoading"
       />
-    </a>
+    </NuxtLink>
     <div class="w-full mb-4 md:w-1/4">
       <Input>
         <UInput
@@ -160,6 +185,7 @@ onMounted(async () => {
     :rows="filteredRows?.slice((page - 1) * pageCount, page * pageCount)"
     :columns="columns"
     class="whitespace-nowrap"
+    v-model:sort="sort"
   >
     <template #actions-data="{ row }">
       <div class="flex justify-end gap-2">

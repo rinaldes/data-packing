@@ -48,7 +48,8 @@ const groupedData = computed(() => {
 
     const dataEntry = grouped.get(timeKey);
     dataEntry.totalReject += entry.reject;
-    dataEntry.totalWeight += entry.weight;
+    dataEntry.totalWeight +=
+      entry.reject + (0.2 * entry.qtyA + 0.3 * entry.qtyB + 0.4 * entry.qtyC);
   });
 
   return Array.from(grouped.values()).map((entry) => ({

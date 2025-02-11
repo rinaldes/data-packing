@@ -71,7 +71,6 @@ watch(
     const qtyA = Number(formData.qtyA) || 0;
     const qtyB = Number(formData.qtyB) || 0;
     const qtyC = Number(formData.qtyC) || 0;
-    console.log("Reject ori:", reject);
 
     formData.weight = reject + (0.2 * qtyA + 0.3 * qtyB + 0.4 * qtyC);
 
@@ -95,7 +94,9 @@ onMounted(() => {
 </script>
 
 <template>
-  <a href="/" class="hover:underline hover:underline-offset-4">🠠 BACK</a>
+  <NuxtLink to="/" class="hover:underline hover:underline-offset-4"
+    >🠠 BACK</NuxtLink
+  >
   <br /><br />
   <h1 class="mb-6">Packing Data Entry</h1>
 

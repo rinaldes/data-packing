@@ -12,12 +12,10 @@ const columns = [
   {
     key: "id",
     label: "No",
-    sortable: true,
   },
   {
     key: "name",
     label: "PIC Pengerjaan",
-    sortable: true,
   },
   {
     key: "actions",
